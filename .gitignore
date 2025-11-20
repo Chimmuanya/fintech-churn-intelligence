@@ -1,3 +1,5 @@
+#replaced with cleaner version
+
 # Python
 __pycache__/
 *.py[cod]
@@ -15,15 +17,10 @@ venv/
 data/raw/
 data/exports/
 
-
 # OS files
 .DS_Store
 Thumbs.db
 
 # Logs
 *.log
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
 *.pkl
-data/raw/*
