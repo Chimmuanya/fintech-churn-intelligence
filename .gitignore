@@ -17,12 +17,6 @@ data/exports/
 *.csv
 *.zip
 
-# Results and models (optionally large)
-results/
-*.pkl
-*.joblib
-*.h5
-
 # OS files
 .DS_Store
 Thumbs.db
