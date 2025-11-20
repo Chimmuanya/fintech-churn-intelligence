@@ -14,8 +14,7 @@ venv/
 # Data (do not commit raw real datasets)
 data/raw/
 data/exports/
-*.csv
-*.zip
+
 
 # OS files
 .DS_Store
