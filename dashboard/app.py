@@ -34,8 +34,8 @@ def load_model(path):
 # Paths (commit these small artifacts into repo)
 # -------------------------
 COHORT_CSV = "results/charts/cohort_matrix.csv"
-SHAP_CSV = "results/models/shap_importance_xgboost.csv"
-PRED_CSV = "results/models/predictions_xgboost.csv"
+SHAP_CSV = "results/models/shap/shap_importance_random_forest.csv"
+PRED_CSV = "results/models/predictions_random_forest.csv"
 MODEL_FILE = "results/models/xgboost.joblib"  # optional
 
 # -------------------------
