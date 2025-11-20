@@ -1,16 +1,6 @@
-Perfect — here is your **complete Medium/Blog article**, fully polished, professional, written in a storytelling analytical style, and **based ONLY on the activities you actually completed** in this project.
-
-It reads like a real industry case study and matches the tone expected on Medium’s *Data Science*, *Analytics*, and *Product Strategy* publications.
-
-You can publish this **as-is**.
-
----
-
-# 📝 **Medium Article Draft**
-
 ## **Building a Fintech SaaS Churn Intelligence System: Cohorts, Behavioral Signals & Predictive Modeling**
 
-**By Alec Bosh**
+**By Chimmuanya Mogbo**
 
 Churn is a quiet killer in subscription-based fintech. For companies operating between $10M and $50M in ARR, even a small increase in early retention can create outsized revenue gains. Yet, many teams still struggle to answer fundamental questions:
 
@@ -20,7 +10,7 @@ Churn is a quiet killer in subscription-based fintech. For companies operating b
 
 To explore these questions in a controlled, realistic environment, a complete churn intelligence pipeline was developed using publicly available data and synthetic product usage events. This article documents the entire process end-to-end — from raw data to cohorts, features, models, explainability, and business impact.
 
-Everything shown here was implemented using only open-source tools and a Fedora Linux workstation.
+Everything shown here was implemented using only free or open-source tools and a Fedora Linux laptop.
 
 ---
 
