@@ -1,72 +1,135 @@
+# dashboard/app.py
 """
-Streamlit dashboard skeleton for Fintech Churn Intelligence.
-
-To run:
-    pip install -r requirements.txt
-    streamlit run dashboard/app.py
-
-This app expects results/charts/cohort_matrix.csv produced by the notebook.
+Streamlit dashboard for Fintech Churn Intelligence
+- Designed for Streamlit Cloud (commit artifacts to repo)
+- Loads precomputed artifacts: cohort_matrix.csv, shap_importance_xgboost.csv, predictions_xgboost.csv
+- Loads a saved model artifact for optional on-the-fly scoring if small
 """
 
 import streamlit as st
 import pandas as pd
+import numpy as np
+import joblib
 import matplotlib.pyplot as plt
-import seaborn as sns
+import plotly.express as px
+from io import BytesIO
 
-# page layout
-st.set_page_config(page_title="Churn Intelligence", layout="wide")
+# Page config
+st.set_page_config(page_title="Churn Intelligence — Cohorts & Risk", layout="wide")
 
-# Title / Header
-st.title("Fintech Churn Intelligence — Cohorts & Retention")
+# -------------------------
+# Cached I/O helpers
+# -------------------------
+@st.cache_data(ttl=3600)  # cache for 1 hour
+def load_csv(path):
+    return pd.read_csv(path, index_col=0)
+
+@st.cache_resource
+def load_model(path):
+    # load lightweight model artifact (joblib)
+    model = joblib.load(path)
+    return model
+
+# -------------------------
+# Paths (commit these small artifacts into repo)
+# -------------------------
+COHORT_CSV = "results/charts/cohort_matrix.csv"
+SHAP_CSV = "results/models/shap_importance_xgboost.csv"
+PRED_CSV = "results/models/predictions_xgboost.csv"
+MODEL_FILE = "results/models/xgboost.joblib"  # optional
+
+# -------------------------
+# Top-level UI
+# -------------------------
+st.title("Fintech Churn Intelligence — Cohorts & Risk")
+st.write("Interactive dashboard for cohort retention, risk scoring and top churn drivers. Designed for SaaS billing platforms.")
 
 # Sidebar filters
-st.sidebar.header("Filters & Options")
-# In a full project you'd populate segments dynamically; for now static choices are fine
-segment_choice = st.sidebar.selectbox("Segment", ["All", "high", "medium", "low"])
-num_cohorts = st.sidebar.slider("Number of cohorts to show", min_value=3, max_value=12, value=6)
+st.sidebar.header("Controls")
+show_model = st.sidebar.checkbox("Enable on-the-fly scoring (loads model)", value=False)
+top_k = st.sidebar.slider("Top risk users to show", min_value=10, max_value=500, value=50, step=10)
+cohorts_to_show = st.sidebar.slider("Cohorts to show", min_value=3, max_value=12, value=6)
 
-# load the cohort matrix CSV created by the notebook
+# -------------------------
+# Load cohort matrix
+# -------------------------
 try:
-    cohort_matrix = pd.read_csv("results/charts/cohort_matrix.csv", index_col=0)
-    # convert index back to datetime if it was saved as string
+    cohort_matrix = load_csv(COHORT_CSV)
+    # attempt to parse index to datetime if stringified
     try:
         cohort_matrix.index = pd.to_datetime(cohort_matrix.index)
     except Exception:
-        # If parse fails, leave as-is
         pass
-except FileNotFoundError:
-    st.error("Cohort matrix not found. Run notebooks/01_eda_cohorts.ipynb first to produce results/charts/cohort_matrix.csv")
+except Exception as e:
+    st.error(f"Could not load cohort matrix: {e}")
     st.stop()
 
-st.markdown("### Retention curves (cohort-based)")
-# build a simple line plot using matplotlib and seaborn
-fig, ax = plt.subplots(figsize=(10, 5))
-
-# show only the last `num_cohorts` cohorts (or first depending on how you want to order)
-# Here, we pick the most recent cohorts by index ordering
-cohorts_to_plot = cohort_matrix.index[-num_cohorts:]
-
-for cohort in cohorts_to_plot:
-    # get retention values as a list
-    try:
-        retention_values = cohort_matrix.loc[str(cohort)].values
-    except KeyError:
-        # sometimes the index types differ; use label matching
-        retention_values = cohort_matrix.loc[cohort].values
-    months = list(range(len(retention_values)))
-    ax.plot(months, retention_values, marker='o', label=str(pd.to_datetime(cohort).date()))
-
-ax.set_xlabel("Months since signup")
-ax.set_ylabel("Retention (fraction)")
-ax.set_ylim(0, 1.05)
-ax.grid(alpha=0.3)
-ax.legend(title="Cohort month")
-st.pyplot(fig)
-
-# Optional: include a table view of the matrix
-with st.expander("Show retention matrix (raw)"):
+# Retention visualization
+st.header("Cohort Retention")
+st.markdown("Retention matrix (rows = signup month, columns = months since signup).")
+with st.expander("Show retention matrix raw"):
     st.dataframe(cohort_matrix.style.format("{:.2f}"))
+
+# plot retention curves with Plotly for interactivity
+recent_cohorts = cohort_matrix.index[-cohorts_to_show:]
+fig = px.line(
+    x=list(range(cohort_matrix.shape[1])),
+    y=[cohort_matrix.loc[c].values for c in recent_cohorts],
+    labels={'x':'Months since signup', 'y':'Retention'},
+    title=f"Retention Curves — last {cohorts_to_show} cohorts"
+)
+# plotly expects tidy traces; add manually
+fig = px.line()
+for c in recent_cohorts:
+    fig.add_scatter(x=list(range(cohort_matrix.shape[1])), y=cohort_matrix.loc[c].values, mode='lines+markers', name=str(pd.to_datetime(c).date()))
+fig.update_layout(yaxis_tickformat=".0%", yaxis_range=[0,1.05])
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# Risk-ranked users table
+# -------------------------
+st.header("Top Risk Users")
+st.markdown("This table shows the highest-risk customers from the test/holdout set (precomputed).")
+
+try:
+    preds = pd.read_csv(PRED_CSV)
+    # ensure columns: user_id, y_true, prob_churn
+    preds = preds.sort_values("prob_churn", ascending=False).reset_index(drop=True)
+except Exception as e:
+    st.warning("Predictions file not found or unreadable. Optionally enable model scoring.")
+    preds = pd.DataFrame(columns=["user_id","y_true","prob_churn"])
+
+# allow dynamic scoring if model available and requested
+if show_model:
+    try:
+        model = load_model(MODEL_FILE)
+        st.success("Model loaded (on-the-fly scoring enabled).")
+        st.caption("On-the-fly scoring uses the model in repo; heavy models may slow the app.")
+    except Exception as e:
+        st.error(f"Failed to load model for on-the-fly scoring: {e}")
+
+# show the top_k risky users
+if not preds.empty:
+    st.dataframe(preds.head(top_k).style.format({"prob_churn":"{:.3f}"}))
+    csv = preds.head(top_k).to_csv(index=False).encode('utf-8')
+    st.download_button("Download top risk CSV", data=csv, file_name="top_risk_users.csv", mime="text/csv")
+else:
+    st.info("No precomputed predictions available. Enable model scoring or upload predictions CSV.")
+
+# -------------------------
+# SHAP importance (precomputed)
+# -------------------------
+st.header("Global Feature Importance (SHAP)")
+st.markdown("Precomputed mean(|SHAP|) values — use this when SHAP is expensive to compute live.")
+
+try:
+    shap_imp = pd.read_csv(SHAP_CSV)
+    # show top 10
+    st.bar_chart(shap_imp.sort_values("mean_abs_shap", ascending=True).set_index("feature")["mean_abs_shap"].tail(10))
+    st.dataframe(shap_imp.sort_values("mean_abs_shap", ascending=False).head(12).style.format({"mean_abs_shap":"{:.4f}"}))
+except Exception as e:
+    st.warning(f"SHAP importance file missing: {e}")
 
 # Footer / notes
 st.markdown("---")
-st.markdown("**Notes:** This is a prototype; cohort matrix is produced by the EDA notebook. Extend filters to segment by plan, channel, or any user property.")
+st.caption("This is a prototype dashboard. For production, connect to a DB and implement auth + logging.")
