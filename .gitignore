@@ -29,3 +29,8 @@ Thumbs.db
 
 # Logs
 *.log
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.pkl
+data/raw/*
