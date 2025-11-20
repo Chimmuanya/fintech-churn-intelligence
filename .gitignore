@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints
+
+# Virtual environment
+venv/
+.env
+
+# Data (do not commit raw real datasets)
+data/raw/
+data/exports/
+*.csv
+*.zip
+
+# Results and models (optionally large)
+results/
+*.pkl
+*.joblib
+*.h5
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

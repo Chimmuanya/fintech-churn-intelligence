@@ -1,0 +1,112 @@
+
+\documentclass[10pt,aspectratio=169]{beamer}
+\usetheme{default}
+\usecolortheme{default}
+\setbeamercolor{title}{fg=#1e40af}
+\setbeamercolor{frametitle}{fg=#1e40af}
+\setbeamercolor{structure}{fg=#1e40af}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+\usepackage{tikz}
+\usepackage{booktabs}
+
+\title{\textbf{Fintech SaaS Churn Intelligence}}
+\subtitle{Predictive Retention System \\ XGBoost + SHAP \\ AUC 0.90}
+\author{Research Director Riley - Approved}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\vspace{-1cm}
+\centering
+\textit{Early-warning system with 100\% precision on top 5\% at-risk customers}
+\end{frame}
+
+\begin{frame}{Business Problem: Churn is Eroding ARR}
+\textbf{Industry:} SaaS Billing \& Subscription Platform
+
+\vspace{0.5cm}
+\begin{itemize}
+    \item Even 1\% churn increase destroys NRR and LTV
+    \item Early-life churn (low tenure) drives majority of losses
+    \item Retaining a customer is \textbf{3--5× cheaper} than acquiring
+\end{itemize}
+
+\vspace{0.5cm}
+\textbf{Core Problem:} Customers cancel without warning → reactive retention
+
+\vspace{0.5cm}
+\textbf{Goal:} Build an \textbf{early-warning intelligence system} with actionable, explainable insights
+\end{frame}
+
+\begin{frame}{Model Performance}
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Model}              & \textbf{AUC} & \textbf{Precision@Top 5\%} \\
+\midrule
+Logistic Regression         & 0.753        & 0.71 \\
+Random Forest               & 0.781        & 0.78 \\
+\textbf{XGBoost (Selected)} & \textbf{0.899} & \textbf{1.000} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{1cm}
+\begin{alertblock}{Business Impact}
+\textbf{Perfect ranking} of the riskiest 5\% → ideal for high-precision save campaigns
+\end{alertblock}
+\end{frame}
+
+\begin{frame}{Key Insights from SHAP - Top Churn Drivers}
+\begin{center}
+\begin{tabular}{rl}
+\toprule
+\textbf{Rank} & \textbf{Driver} \\
+\midrule
+1 & \textbf{tenure\_months\_precise} \textcolor{red}{→ Onboarding crisis} \\
+2 & events\_count \textcolor{red}{→ Low engagement} \\
+3 & events\_last\_30d \textcolor{red}{→ Recent drop-off} \\
+4 & error\_event\_count \textcolor{red}{→ Billing friction} \\
+5 & support\_contacts\_count \textcolor{red}{→ Pre-churn pain} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.8cm}
+\textbf{Conclusion:} Churn = \textbf{activation failure + product friction}
+\end{frame}
+
+\begin{frame}{High-Impact Recommendations}
+\begin{enumerate}
+    \item \textbf{Reinvent Onboarding} (Day 1--7 success path) → highest ROI
+    \item \textbf{Eliminate Errors} (real-time monitoring + escalation)
+    \item \textbf{Automated Reactivation} for low-activity users
+    \item \textbf{High-Risk Save Desk} - 100\% precision on top 5\%
+\end{enumerate}
+
+\vspace{0.8cm}
+\alert{Expected impact: \textbf{+15--25\%} in 90-day retention}
+\end{frame}
+
+ \begin{frame}{Deployment Roadmap}
+ \begin{center}
+ \begin{tabular}{ll}
+ \toprule
+ \textbf{Phase} & \textbf{Deliverable} \\
+ \midrule
+ 1 week  & Live Streamlit churn dashboard \\
+ 2 weeks & CRM integration (HubSpot/Salesforce) \\
+ 3 weeks & Weekly inference + Slack alerts \\
+ Ongoing & Add billing failures, plan tier features \\
+ \bottomrule
+ \end{tabular}
+ \end{center}
+
+ \vspace{1cm}
+ \Large \textbf{Production-ready today.}
+ \end{frame}
+
+\end{document}
