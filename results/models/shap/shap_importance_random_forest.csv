@@ -1,0 +1,9 @@
+feature,mean_abs_shap
+tenure_months_precise,0.14104559066653177
+events_count,0.020504391915687467
+events_last_30d,0.020355407597148985
+unique_active_days,0.01985552783193205
+error_event_count,0.019035678231194682
+support_contacts_count,0.01428361383202106
+time_to_first_event_days,0.0
+days_since_last_event,0.0
